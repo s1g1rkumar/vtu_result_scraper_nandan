@@ -38,7 +38,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 
 # Global Flask App Placeholder
-app = Flask(_name_)
+app = Flask(__name__)
 
 # --- Configuration Class for Centralized Settings ---
 class Config:
@@ -84,7 +84,7 @@ class KeyRotator:
     backoff penalty for rate-limited keys.
     """
     
-    def _init_(self, api_keys: List[str]):
+    def __init__(self, api_keys: List[str]):
         self.api_keys = api_keys
         self.num_keys = len(api_keys)
         self.current_index = 0
@@ -139,7 +139,7 @@ class KeyRotator:
 class CaptchaSolver:
     """Manages Gemini-based CAPTCHA solving with Key Rotation."""
     
-    def _init_(self, key_rotator: KeyRotator):
+    def __init__(self, key_rotator: KeyRotator):
         self.key_rotator = key_rotator
 
     def solve(self, image_content: bytes) -> Optional[str]:
@@ -196,7 +196,7 @@ class CaptchaSolver:
                     continue 
                 app.logger.error(f"-> GEMINI API Error ({key_alias}): {e}")
             except (json.JSONDecodeError, Exception) as e:
-                app.logger.error(f"-> Unexpected error during AI solving ({key_alias}): {type(e)._name_} - {e}")
+                app.logger.error(f"-> Unexpected error during AI solving ({key_alias}): {type(e).__name__} - {e}")
             
         app.logger.error("ALL API KEY attempts exhausted for the current CAPTCHA solving.")
         return None
@@ -206,7 +206,7 @@ class CaptchaSolver:
 class VTUScraper:
     """Encapsulates all web scraping logic."""
     
-    def _init_(self, captcha_solver: CaptchaSolver):
+    def __init__(self, captcha_solver: CaptchaSolver):
         self.captcha_solver = captcha_solver
 
     def fetch_result(self, usn: str, index_url: str, result_url: str) -> Optional[dict]:
@@ -289,7 +289,7 @@ class VTUScraper:
                         if next_td:
                             # Check if it's the colon <td>
                             if next_td.get_text(strip=True) == ':':
-                                # If it's a colon, the name is in the next sibling after that
+                                # If it's a colon, the name is in the *next* sibling after that
                                 name_td = next_td.find_next_sibling('td')
                                 if name_td:
                                     name = name_td.get_text(strip=True)
@@ -348,7 +348,7 @@ class VTUScraper:
                 return {'usn': usn, 'name': name, 'semester': semester, 'subjects': subjects}
 
             except Exception as e:
-                app.logger.error(f"[{usn}] Error processing on attempt {attempt}: {type(e)._name_} - {e}")
+                app.logger.error(f"[{usn}] Error processing on attempt {attempt}: {type(e).__name__} - {e}")
                 time.sleep(random.uniform(1, 3))
                 continue
         
@@ -516,7 +516,7 @@ def get_bulk_vtu_results() -> Response:
             download_url = f"{request.url_root.rstrip('/')}/api/vtu/download/{filename}"
         except Exception as e:
             app.logger.error(f"Error generating Bulk Excel file: {e}")
-            download_url = f"Error generating Excel file: {type(e)._name_}"
+            download_url = f"Error generating Excel file: {type(e).__name__}"
 
     response_data = {
         "status": "partial_success" if successful_results and failed_usns else ("success" if successful_results else "failure"),
@@ -532,7 +532,7 @@ def get_bulk_vtu_results() -> Response:
 
     return jsonify(response_data), 200
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     
     if not Config.API_KEYS:
         print("="*60)
